@@ -1,3 +1,4 @@
+@component('layouts.app')
 <div class="m-5 text-center">
     <h1 class="text-[#FF2D20] text-4xl font-bold mb-4">Il mio progetto Laravel</h1>
     
@@ -6,3 +7,4 @@
         Apri il Counter con la Saetta ⚡
     </a>
 </div>
+@endcomponent

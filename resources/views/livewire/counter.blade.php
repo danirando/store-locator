@@ -3,8 +3,7 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 
-#[Layout('layouts.app')]
-new class extends Component {
+new #[Layout('layouts.app')] class extends Component {
     public $count = 0;
 
     public function increment() {
