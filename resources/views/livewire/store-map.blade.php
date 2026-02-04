@@ -6,24 +6,36 @@
 
     <!-- Left Column: Store List -->
     <div class="w-full md:w-1/3 bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden h-full flex flex-col">
-        <div class="p-4 bg-white dark:bg-gray-800 border-b dark:border-gray-700 z-10 shrink-0">
+        <div class="p-4 bg-white dark:bg-gray-800 border-b dark:border-gray-700 z-10 shrink-0 space-y-3">
             <h2 class="text-xl font-bold text-gray-800 dark:text-white">Store List ({{ count($stores) }} stores)</h2>
+            <input 
+                type="text" 
+                wire:model.live="searchCity" 
+                placeholder="Cerca per città..." 
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
         </div>
         <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4">
-            @foreach($stores as $store)
-                <div class="p-4 border rounded-lg hover:shadow-md transition bg-gray-50 dark:bg-gray-700 dark:border-gray-600 cursor-pointer" 
-                     wire:key="store-{{ $store->id }}"
-                     onclick="focusOnStore({{ $store->latitudine }}, {{ $store->longitudine }})">
-                    <h3 class="font-bold text-lg text-gray-900 dark:text-white">{{ $store->nome }}</h3>
-                    <p class="text-gray-600 dark:text-gray-300 text-sm">{{ $store->indirizzo }}, {{ $store->città }}</p>
-                    @if($store->telefono)
-                        <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">Tel: {{ $store->telefono }}</p>
-                    @endif
-                    <p class="text-xs mt-2 text-indigo-600 dark:text-indigo-400 font-semibold">
-                        {{ $store->totem }}
-                    </p>
+            @if($filteredStores->count() > 0)
+                @foreach($filteredStores as $store)
+                    <div class="p-4 border rounded-lg hover:shadow-md transition bg-gray-50 dark:bg-gray-700 dark:border-gray-600 cursor-pointer" 
+                         wire:key="store-{{ $store->id }}"
+                         onclick="focusOnStore({{ $store->id }}, {{ $store->latitudine }}, {{ $store->longitudine }})">
+                        <h3 class="font-bold text-lg text-gray-900 dark:text-white">{{ $store->nome }}</h3>
+                        <p class="text-gray-600 dark:text-gray-300 text-sm">{{ $store->indirizzo }}, {{ $store->città }}</p>
+                        @if($store->telefono)
+                            <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">Tel: {{ $store->telefono }}</p>
+                        @endif
+                    </div>
+                @endforeach
+            @else
+                <div class="flex items-center justify-center h-full text-center">
+                    <div>
+                        <p class="text-gray-500 dark:text-gray-400 text-lg font-medium">Nessuno store trovato</p>
+                        <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">per la città "{{ $searchCity }}"</p>
+                    </div>
                 </div>
-            @endforeach
+            @endif
         </div>
     </div>
     
@@ -37,10 +49,19 @@
         console.log('=== MAP SCRIPT LOADING ===');
         
         let mapInstance = null;
+        let currentPopup = null;
         const storesData = @json($stores);
+        const storesMap = {};
         
         console.log('Stores data:', storesData);
         console.log('Number of stores:', storesData ? storesData.length : 0);
+
+        // Create a map of store IDs to store objects for quick lookup
+        if (storesData && Array.isArray(storesData)) {
+            storesData.forEach(store => {
+                storesMap[store.id] = store;
+            });
+        }
 
         function initializeMap() {
             console.log('initializeMap called');
@@ -96,9 +117,12 @@
                             const lng = parseFloat(store.longitudine);
                             
                             if (!isNaN(lat) && !isNaN(lng)) {
-                                L.marker([lat, lng])
+                                const marker = L.marker([lat, lng])
                                     .addTo(mapInstance)
                                     .bindPopup(`<b>${store.nome}</b><br>${store.indirizzo}, ${store.città}`);
+                                
+                                // Store marker reference for later use
+                                store.marker = marker;
                                 markersAdded++;
                             } else {
                                 console.warn(`Store ${index} has invalid coordinates:`, lat, lng);
@@ -127,11 +151,18 @@
         }
 
         // Global function for clicking stores
-        window.focusOnStore = function(lat, lng) {
-            console.log('focusOnStore called:', lat, lng);
+        window.focusOnStore = function(storeId, lat, lng) {
+            console.log('focusOnStore called:', storeId, lat, lng);
+            
             if (mapInstance) {
                 mapInstance.setView([lat, lng], 15);
                 setTimeout(() => mapInstance.invalidateSize(), 100);
+                
+                // Find and open the marker popup
+                const store = storesMap[storeId];
+                if (store && store.marker) {
+                    store.marker.openPopup();
+                }
             }
         };
 
