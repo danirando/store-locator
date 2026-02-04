@@ -15,7 +15,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function import()
     {
         $this->validate([
-            'file_csv' => 'required|mimes:csv,txt,xlsx|max:10240', // 10MB Max
+            'file_csv' => 'required|mimes:csv|max:10240', // Solo CSV, max 10MB
         ]);
 
         try {
@@ -41,9 +41,26 @@ new #[Layout('layouts.app')] class extends Component {
                 @endif
 
                 <form wire:submit="import" class="space-y-4">
+                    <!-- Istruzioni e Colonne Richieste -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <h3 class="text-sm font-semibold text-blue-900 mb-3">📋 Formato File Richiesto</h3>
+                        <div class="text-sm text-blue-800 mb-3">
+                            <p class="font-medium mb-2">Il file deve essere in formato <span class="font-bold">.CSV</span> e contenere le seguenti colonne:</p>
+                            <ul class="list-disc list-inside space-y-1 ml-2">
+                                <li><span class="font-semibold">nome</span> - Nome dello store</li>
+                                <li><span class="font-semibold">indirizzo</span> - Indirizzo completo</li>
+                                <li><span class="font-semibold">città</span> - Città dello store</li>
+                                <li><span class="font-semibold">latitudine</span> - Coordinata latitudine (decimale)</li>
+                                <li><span class="font-semibold">longitudine</span> - Coordinata longitudine (decimale)</li>
+                                <li><span class="font-semibold">telefono</span> - Numero di telefono (opzionale)</li>
+                                <li><span class="font-semibold">totem</span> - Identificativo totem</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
                     <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900" for="file_input">Upload file</label>
-                        <input wire:model="file_csv" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" id="file_input" type="file">
+                        <label class="block mb-2 text-sm font-medium text-gray-900" for="file_input">Seleziona file CSV</label>
+                        <input wire:model="file_csv" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" id="file_input" type="file" accept=".csv">
                         @error('file_csv') 
                             <span class="text-red-500 text-sm">{{ $message }}</span> 
                         @enderror
